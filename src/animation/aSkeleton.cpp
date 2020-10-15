@@ -23,7 +23,7 @@ ASkeleton::ASkeleton(const ASkeleton& inputSkeleton)
 
 ASkeleton& ASkeleton::operator = (const ASkeleton& inputSkeleton)
 {
-	// Performs a deep copy which includes joint hiearchy (mJoints) and transform data	
+	// Performs a deep copy which includes joint hiearchy (mJoints) and transform data
 	if (&inputSkeleton == this)
 	{
 		return *this;
@@ -36,7 +36,7 @@ ASkeleton& ASkeleton::operator = (const ASkeleton& inputSkeleton)
 }
 void ASkeleton::copyHierarchy(const ASkeleton* inputSkeleton)
 {
-	// Performs a deep copy which includes joint hiearchy (mJoints) and transform data	
+	// Performs a deep copy which includes joint hiearchy (mJoints) and transform data
 	if (inputSkeleton == this)
 	{
 		return;
@@ -97,7 +97,7 @@ void ASkeleton::copyTransforms(const ASkeleton* inputSkeleton)
 
 	AJoint* pJointInput;
 	AJoint* pJoint;
-	 
+
 	for (int i = 0; i < mJointCount; i++) {
 		pJoint = this->mJoints[i];
 		pJointInput = inputSkeleton->mJoints[i];
@@ -126,8 +126,9 @@ void ASkeleton::update()
 {
 	if (!mRoot) return; // Nothing loaded
 
-	// TODO: Update Joint Transforms recursively, starting at the root
-
+	// Update Joint Transforms recursively, starting at the root
+	mRoot->updateTransform();
+	
 }
 
 AJoint* ASkeleton::getJointByName(const std::string& name) const

@@ -12,25 +12,25 @@ enum { VX, VY, VZ, VW };
 #pragma warning(disable : 4244)
 
 // CONSTRUCTORS
-mat3::mat3() 
+mat3::mat3()
 {
     mM[0] = vec3(0.0f,0.0f,0.0f);
     mM[1] = mM[2] = mM[0];
 }
 
 mat3::mat3(const vec3& v0, const vec3& v1, const vec3& v2)
-{ 
-    mM[0] = v0; mM[1] = v1; mM[2] = v2; 
+{
+    mM[0] = v0; mM[1] = v1; mM[2] = v2;
 }
 
 mat3::mat3(double d)
-{ 
-    mM[0] = mM[1] = mM[2] = vec3(d); 
+{
+    mM[0] = mM[1] = mM[2] = vec3(d);
 }
 
 mat3::mat3(const mat3& m)
-{ 
-    mM[0] = m.mM[0]; mM[1] = m.mM[1]; mM[2] = m.mM[2]; 
+{
+    mM[0] = m.mM[0]; mM[1] = m.mM[1]; mM[2] = m.mM[2];
 }
 
 
@@ -219,8 +219,30 @@ bool mat3::ToEulerAngles(RotOrder order, vec3& angleRad) const
 
 	case YXZ:
 		//TODO: student implementation for computing Euler angles from a rotation matrix with an YXZ order of rotation goes here
-		angleRad = vec3(0.0, 0.0, 0.0);
-		result = false;
+        angleRad[VX] = asin(-mM[1][2]);
+        if (angleRad[VX] > -M_PI_2 + EPSILON)
+		{
+			if (angleRad[VX] < M_PI_2 - EPSILON)
+			{
+				angleRad[VZ] = atan2(mM[1][0], mM[1][1]);
+				angleRad[VY] = atan2(mM[0][2], mM[2][2]);
+				result = true;
+			}
+			else
+			{
+				// WARNING.  Not a unique solution.
+				angleRad[VY] = 0.0f;
+				angleRad[VZ] = atan2(mM[0][1], mM[0][0]);
+				result = false;
+			}
+		}
+		else
+		{
+			// WARNING.  Not a unique solution.
+			angleRad[VY] = 0.0f;
+			angleRad[VZ] = -atan2(mM[0][1], mM[0][0]);
+			result = false;
+		}
 
 		break;
 	}
@@ -264,7 +286,9 @@ mat3 mat3::FromEulerAngles(RotOrder order, const vec3& anglesRad)
 
 	case YXZ:
 		//TODO: student implementation for computing rotation matrix for YXZ order of rotation goes here
-		m.Identity();
+        m = mat3::Rotation3D(axisY, anglesRad[VY])
+			* mat3::Rotation3D(axisX, anglesRad[VX])
+			* mat3::Rotation3D(axisZ, anglesRad[VZ]);
 
 		break;
 	}
@@ -447,7 +471,7 @@ void mat3::ToAxisAngle(vec3& axis, double& angleRad) const
 
 mat3 mat3::FromToRotation(const vec3& fromDir, const vec3& toDir)
 {
-	
+
     vec3 dir1 = fromDir;
     vec3 dir2 = toDir;
     dir1.Normalize();
@@ -462,7 +486,7 @@ mat3 mat3::FromToRotation(const vec3& fromDir, const vec3& toDir)
     mat3 mat;
     mat.FromAxisAngle(axis, angle);
     vec3 tmp1 = mat * dir1;
-    //std::cout << "CHECK " << tmp1 << dir2 << std::endl; 
+    //std::cout << "CHECK " << tmp1 << dir2 << std::endl;
     return mat;
 }
 
@@ -494,7 +518,7 @@ mat3 mat3::Inverse() const    // Gauss-Jordan elimination with partial pivoting
 
         // Eliminate off-diagonal elements in col j of a, doing identical ops to b
         for (i=0; i<3; i++)
-            if (i!=j) 
+            if (i!=j)
             {
             	b.mM[i] -= a.mM[i].n[j]*b.mM[j];
             	a.mM[i] -= a.mM[i].n[j]*a.mM[j];
@@ -512,42 +536,42 @@ void mat3::FromAxisAngle(const vec3& axis, double angleRad)
 // ASSIGNMENT OPERATORS
 
 mat3& mat3::operator = ( const mat3& m )
-{ 
-    mM[0] = m.mM[0]; mM[1] = m.mM[1]; mM[2] = m.mM[2]; 
-    return *this; 
+{
+    mM[0] = m.mM[0]; mM[1] = m.mM[1]; mM[2] = m.mM[2];
+    return *this;
 }
 
 mat3& mat3::operator += ( const mat3& m )
-{ 
-    mM[0] += m.mM[0]; mM[1] += m.mM[1]; mM[2] += m.mM[2]; 
-    return *this; 
+{
+    mM[0] += m.mM[0]; mM[1] += m.mM[1]; mM[2] += m.mM[2];
+    return *this;
 }
 
 mat3& mat3::operator -= ( const mat3& m )
-{ 
-    mM[0] -= m.mM[0]; mM[1] -= m.mM[1]; mM[2] -= m.mM[2]; 
-    return *this; 
+{
+    mM[0] -= m.mM[0]; mM[1] -= m.mM[1]; mM[2] -= m.mM[2];
+    return *this;
 }
 
 mat3& mat3::operator *= ( double d )
-{ 
-    mM[0] *= d; mM[1] *= d; mM[2] *= d; 
-    return *this; 
+{
+    mM[0] *= d; mM[1] *= d; mM[2] *= d;
+    return *this;
 }
 
 mat3& mat3::operator /= ( double d )
-{ 
-    mM[0] /= d; mM[1] /= d; mM[2] /= d; 
-    return *this; 
+{
+    mM[0] /= d; mM[1] /= d; mM[2] /= d;
+    return *this;
 }
 
-vec3& mat3::operator [] ( int i) 
+vec3& mat3::operator [] ( int i)
 {
     assert(! (i < VX || i > VZ));
     return mM[i];
 }
 
-const vec3& mat3::operator [] ( int i) const 
+const vec3& mat3::operator [] ( int i) const
 {
     assert(!(i < VX || i > VZ));
     return mM[i];
@@ -555,7 +579,7 @@ const vec3& mat3::operator [] ( int i) const
 
 // SPECIAL FUNCTIONS
 
-mat3 mat3::Transpose() const 
+mat3 mat3::Transpose() const
 {
     return mat3(vec3(mM[0][0], mM[1][0], mM[2][0]),
         vec3(mM[0][1], mM[1][1], mM[2][1]),
@@ -677,7 +701,7 @@ vec3 mat3::GetYawPitchRoll(unsigned int leftAxis, unsigned int upAxis, unsigned 
 //    |-sin(a)  0  cos(a)    Tz|
 //    |      0  0       0    1 |
 //
-//    Rz = 
+//    Rz =
 //    |cos(a)  -sin(a)  0   Tx|
 //    |sin(a)   cos(a)  0   Ty|
 //    |     0        0  1   Tz|
@@ -693,18 +717,18 @@ vec3 mat3::GetYawPitchRoll(unsigned int leftAxis, unsigned int upAxis, unsigned 
 // FRIENDS
 
 mat3 operator - (const mat3& a)
-{ 
-    return mat3(-a.mM[0], -a.mM[1], -a.mM[2]); 
+{
+    return mat3(-a.mM[0], -a.mM[1], -a.mM[2]);
 }
 
 mat3 operator + (const mat3& a, const mat3& b)
-{ 
-    return mat3(a.mM[0] + b.mM[0], a.mM[1] + b.mM[1], a.mM[2] + b.mM[2]); 
+{
+    return mat3(a.mM[0] + b.mM[0], a.mM[1] + b.mM[1], a.mM[2] + b.mM[2]);
 }
 
 mat3 operator - (const mat3& a, const mat3& b)
-{ 
-    return mat3(a.mM[0] - b.mM[0], a.mM[1] - b.mM[1], a.mM[2] - b.mM[2]); 
+{
+    return mat3(a.mM[0] - b.mM[0], a.mM[1] - b.mM[1], a.mM[2] - b.mM[2]);
 }
 
 mat3 operator * (const mat3& a, const mat3& b)
@@ -718,33 +742,33 @@ mat3 operator * (const mat3& a, const mat3& b)
 }
 
 mat3 operator * (const mat3& a, double d)
-{ 
-    return mat3(a.mM[0] * d, a.mM[1] * d, a.mM[2] * d); 
+{
+    return mat3(a.mM[0] * d, a.mM[1] * d, a.mM[2] * d);
 }
 
 mat3 operator * (double d, const mat3& a)
-{ 
-    return a*d; 
+{
+    return a*d;
 }
 
 mat3 operator / (const mat3& a, double d)
-{ 
-    return mat3(a.mM[0] / d, a.mM[1] / d, a.mM[2] / d); 
+{
+    return mat3(a.mM[0] / d, a.mM[1] / d, a.mM[2] / d);
 }
 
 int operator == (const mat3& a, const mat3& b)
-{ 
-    return (a.mM[0] == b.mM[0]) && (a.mM[1] == b.mM[1]) && (a.mM[2] == b.mM[2]); 
+{
+    return (a.mM[0] == b.mM[0]) && (a.mM[1] == b.mM[1]) && (a.mM[2] == b.mM[2]);
 }
 
 int operator != (const mat3& a, const mat3& b)
-{ 
-    return !(a == b); 
+{
+    return !(a == b);
 }
 
 void Swap(mat3& a, mat3& b)
-{ 
-    mat3 tmp(a); a = b; b = tmp; 
+{
+    mat3 tmp(a); a = b; b = tmp;
 }
 
 std::istream& operator >> (std::istream& s, mat3& m)
@@ -917,7 +941,7 @@ double quat::Z() const
 
 quat operator - (const quat& q)
 {
-    return quat(-q.mQ[VW], -q.mQ[VX], -q.mQ[VY], -q.mQ[VZ]); 
+    return quat(-q.mQ[VW], -q.mQ[VX], -q.mQ[VY], -q.mQ[VZ]);
 }
 
 quat operator + (const quat& q0, const quat& q1)
@@ -960,7 +984,7 @@ bool operator == (const quat& q0, const quat& q1)
 
 bool operator != (const quat& q0, const quat& q1)
 {
-    return !(q0 == q1); 
+    return !(q0 == q1);
 }
 
 // special functions
@@ -975,7 +999,7 @@ double quat::Length() const
     double l = SqrLength();
     if (l > EPSILON)
         return sqrt(SqrLength());
-    else 
+    else
         return 0;
 }
 
@@ -990,7 +1014,7 @@ quat& quat::Normalize()
         *this /= l;
     }
 
-    return *this; 
+    return *this;
 }
 
 
@@ -1026,7 +1050,7 @@ quat quat::Log(const quat& q)
 {
     // q = cos(A)+sin(A)*(x*i+y*j+z*k) where (x,y,z) is unit length
     // log(q) = A*(x*i+y*j+z*k)
-    
+
     double angle = acos(q.mQ[VW]);
     double sn = sin(angle);
 
@@ -1043,26 +1067,45 @@ void quat::Zero()
 }
 
 #define Q_EST(a, b, c) 0.25*(1 + a + b + c)
-#define Q_MAX(a, b, c, d) std::max(a, std::max(b, std::max(c, d))) 
+#define Q_MAX(a, b, c, d) std::max(a, std::max(b, std::max(c, d)))
 
 void quat::FromRotation(const mat3& rot)
 {
-	mQ[VW] = 0.0; mQ[VX] = 1.0; mQ[VY] = 0.0;  mQ[VZ] = 0.0;
 	//TODO: student implementation for converting from rotation matrix to quat goes here
-	
+    double sum = rot[0][0]+rot[1][1]+rot[2][2]+1;
+    if (sum<0){
+        sum = 0;
+    }
+    mQ[VW] = std::sqrt(sum)/2;
+    if (IS_ZERO(mQ[VW])){
+        mQ[VX] = 1;
+        mQ[VY] = 0;
+        mQ[VZ] = 0;
+    }
+    else{
+        mQ[VX] = (rot[2][1]-rot[1][2])/(4*mQ[VW]);
+        mQ[VY] = (rot[0][2]-rot[2][0])/(4*mQ[VW]);
+        mQ[VZ] = (rot[1][0]-rot[0][1])/(4*mQ[VW]);
+    }
+
 	Normalize();
 }
 
 quat quat::Slerp(const quat& q0, const quat& q1, double u)
 {
-	quat q = q0;
-	//TODO: student implemetation of Slerp goes here
 
+	//TODO: student implemetation of Slerp goes here
+    double product = quat::Dot(q0, q1);
+    double omega = acos(product);
+    double tmp = sin(omega);
+    if(IS_ZERO(tmp)) return q0;
+
+    quat q = (sin((1-u)*omega)/sin(omega))*q0 + (sin(omega*u)/sin(omega))*q1;
 	return q.Normalize();
 }
 quat quat::SDouble(const quat& a, const quat& b)
 {
-	quat q = a;
+	quat q = 2*quat::Dot(a, b)*b - a;
 	//TODO: student implementation ofSDouble goes here
 
 	return q.Normalize();
@@ -1070,7 +1113,9 @@ quat quat::SDouble(const quat& a, const quat& b)
 
 quat quat::SBisect(const quat& a, const quat& b)
 {
-	quat q = a;
+    quat sum = a + b;
+    double l = sum.Length();
+	quat q = sum/(l);
 	//TODO: student implementation of SBisect goes here
 
 	return q.Normalize();
@@ -1079,10 +1124,17 @@ quat quat::SBisect(const quat& a, const quat& b)
 
 quat quat::Scubic(const quat& b0, const quat& b1, const quat& b2, const quat& b3, double u)
 {
-	quat result = b0;
-	quat b01, b11, b21, b02, b12, b03;
 	// TODO: Return the result of Scubic based on the cubic quaternion curve control points b0, b1, b2 and b3
 
+
+    quat b_01 = Slerp(b0, b1, u);
+    quat b_11 = Slerp(b1, b2, u);
+    quat b_21 = Slerp(b2, b3, u);
+
+    quat b_02 = Slerp(b_01, b_11, u);
+    quat b_12 = Slerp(b_11, b_21, u);
+
+    quat result = Slerp(b_02, b_12, u);
 	return result.Normalize(); // result should be of unit length
 }
 
@@ -1157,24 +1209,36 @@ quat quat::ProjectToAxis(const quat& q, vec3& axis)
         double s = axis * qv;
         double c = q.W();
         halfTheta = atan2(s, c);
-    }    
+    }
     double cn = cos(halfTheta);
     sn = sin(halfTheta);
-    return quat(cn, sn * axis[VX], sn * axis[VY], sn * axis[VZ]); 
+    return quat(cn, sn * axis[VX], sn * axis[VY], sn * axis[VZ]);
 }
 
 // Conversion functions
 void quat::ToAxisAngle (vec3& axis, double& angleRad) const
 {
-	axis = vec3(1.0, 0.0, 0.0);
-	angleRad = 0.0;
+
 	//TODO: student implementation for converting quaternion to axis/angle representation goes here
+    double halfTheta = acos(mQ[VW]);
+    angleRad = 2*halfTheta;
+    double sn = sin(halfTheta);
+    axis = vec3(0,0,0);
+    if(!IS_ZERO(sn)){
+        axis = vec3(mQ[VX]/sn, mQ[VY]/sn, mQ[VZ]/sn);
+    }
+
 }
 
 void quat::FromAxisAngle (const vec3& axis, double angleRad)
 {
 	//TODO: student implementation for converting from axis/angle to quaternion goes here
-	mQ[VW] = 0.0; mQ[VX] = 1.0; mQ[VY] = 0.0;  mQ[VZ] = 0.0;
+    mQ[VW] = cos(angleRad/2);
+    vec3 qv = sin(angleRad/2) * axis;
+    mQ[VX] = qv[0];
+    mQ[VY] = qv[1];
+    mQ[VZ] = qv[2];
+
 }
 
 mat3 quat::ToRotation () const
@@ -1182,6 +1246,19 @@ mat3 quat::ToRotation () const
 	mat3 m;
 	m.Identity();
 	//TODO: student implementation for converting quaternion to rotation matrix goes here
+    double s = mQ[VW];
+    double x = mQ[VX];
+    double y = mQ[VY];
+    double z = mQ[VZ];
+    m[0][0] = 1-2*y*y-2*z*z;
+    m[0][1] = 2*x*y-2*s*z;
+    m[0][2] = 2*x*z+2*s*y;
+    m[1][0] = 2*x*y+2*s*z;
+    m[1][1] = 1-2*x*x-2*z*z;
+    m[1][2] = 2*y*z-2*s*x;
+    m[2][0] = 2*x*z-2*s*y;
+    m[2][1] = 2*y*z+2*s*x;
+    m[2][2] = 1-2*x*x-2*y*y;
 
 	return m;
 }
