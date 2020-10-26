@@ -101,7 +101,6 @@ void AActor::updateGuideJoint(vec3 guideTargetPos)
 {
 	if (!m_pSkeleton->getRootNode()) { return; }
 
-	// TODO: 
 	// 1.	Set the global position of the guide joint to the global position of the root joint
 	// 2.	Set the y component of the guide position to 0
 	AJoint* root = m_pSkeleton->getRootNode();
@@ -126,7 +125,6 @@ void AActor::solveFootIK(float leftHeight, float rightHeight, bool rotateLeft, b
 	AJoint* rightFoot = m_pSkeleton->getJointByID(m_IKController->mRfootID);
 	AJoint* root = m_pSkeleton->getRootNode();
 
-	// TODO: 
 	// The normal and the height given are in the world space
 
 	// 1.	Update the local translation of the root based on the left height and the right height
