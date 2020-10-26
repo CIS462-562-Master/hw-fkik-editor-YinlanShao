@@ -104,7 +104,19 @@ void AActor::updateGuideJoint(vec3 guideTargetPos)
 	// TODO: 
 	// 1.	Set the global position of the guide joint to the global position of the root joint
 	// 2.	Set the y component of the guide position to 0
+	AJoint* root = m_pSkeleton->getRootNode();
+	vec3 pos = m_Guide.getGlobalRotation() * root->getGlobalTranslation() + m_Guide.getGlobalTranslation();
+	pos[1] = 0;
+	m_Guide.setGlobalTranslation(pos);
+
 	// 3.	Set the global rotation of the guide joint towards the guideTarget
+	guideTargetPos[1] = 0;
+	vec3 forward = (guideTargetPos - m_Guide.getGlobalTranslation()).Normalize();
+	vec3 up = vec3(0, 1, 0);
+	mat3 rot(up.Cross(forward).Normalize(), up, forward);
+	m_Guide.setGlobalRotation(rot.Transpose());
+	m_pSkeleton->update();
+
 }
 
 void AActor::solveFootIK(float leftHeight, float rightHeight, bool rotateLeft, bool rotateRight, vec3 leftNormal, vec3 rightNormal)
@@ -112,26 +124,43 @@ void AActor::solveFootIK(float leftHeight, float rightHeight, bool rotateLeft, b
 	if (!m_pSkeleton->getRootNode()) { return; }
 	AJoint* leftFoot = m_pSkeleton->getJointByID(m_IKController->mLfootID);
 	AJoint* rightFoot = m_pSkeleton->getJointByID(m_IKController->mRfootID);
+	AJoint* root = m_pSkeleton->getRootNode();
 
 	// TODO: 
 	// The normal and the height given are in the world space
 
 	// 1.	Update the local translation of the root based on the left height and the right height
-
+	double height = leftHeight;
+	if(rightHeight>leftHeight) height = rightHeight;
+	vec3 rootPos = root->getLocalTranslation();
+	root->setLocalTranslation(vec3(rootPos[0], rootPos[1]+height, rootPos[2]));
 	m_pSkeleton->update();
 
 	// 2.	Update the character with Limb-based IK 
+	vec3 leftFootPos = leftFoot->getGlobalTranslation()+vec3(0, leftHeight, 0);
+	ATarget targetLeft = ATarget();
+	targetLeft.setGlobalTranslation(leftFootPos);
+	m_IKController->IKSolver_Limb(m_IKController->mLfootID, targetLeft);
+
+	vec3 rightFootPos = rightFoot->getGlobalTranslation()+vec3(0, rightHeight, 0);
+	ATarget targetRight = ATarget();
+	targetRight.setGlobalTranslation(rightFootPos);
+	m_IKController->IKSolver_Limb(m_IKController->mRfootID, targetRight);
 	
 	// Rotate Foot
 	if (rotateLeft)
 	{
 		// Update the local orientation of the left foot based on the left normal
-		;
+		mat3 rot( leftNormal.Cross(leftFoot->getGlobalRotation()[2] ), leftNormal, leftFoot->getGlobalRotation()[2] );
+		leftFoot->setGlobalRotation(rot);
 	}
 	if (rotateRight)
 	{
 		// Update the local orientation of the right foot based on the right normal
-		;
+		mat3 rot( rightNormal.Cross(rightFoot->getGlobalRotation()[2] ), rightNormal, rightFoot->getGlobalRotation()[2] );
+		rightFoot->setGlobalRotation(rot);
+
 	}
 	m_pSkeleton->update();
+
 }
